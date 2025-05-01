@@ -6,7 +6,7 @@
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/TrueSelph/pulse_action)
 ![GitHub](https://img.shields.io/github/license/TrueSelph/pulse_action)
 
-Core pulse action for triggering scheduled pulse abilities on subscribing actions.
+This action provides a core mechanism for triggering scheduled pulse activities in subscribing actions. As a pulse action, it ensures periodic and timely execution of tasks within the subscribing actions framework. The package is a singleton and requires the Jivas library version 2.0.0.
 
 ## Package Information
 
@@ -28,8 +28,6 @@ Core pulse action for triggering scheduled pulse abilities on subscribing action
 
 - **Jivas:** `^2.0.0`
 
-This package, developed by V75 Inc., provides a core mechanism for triggering scheduled pulse activities in subscribing actions. As a pulse action, it ensures periodic and timely execution of tasks within the subscribing actions framework. The package is a singleton and requires the Jivas library version 2.0.0.
-
 ---
 
 ## How to Use
@@ -48,39 +46,65 @@ The Pulse Action provides a mechanism for scheduling and triggering periodic tas
 
 ### Configuration Structure
 
-The configuration consists of the following components:
+The action accepts direct entries under the `config` parameter, which can be specified in the agent descriptor entry for the action. Below is an example:
 
-### `pulse_settings`
+```yaml
+- action: jivas/pulse_action
+    context:
+        enabled: true
+        version: ">=0.0.1"
+        config:
+            DHBReportUpdateInteractAction: every().day.at("05:30", "America/Guyana")
+```
 
-Defines the settings for the pulse action, such as intervals and task parameters.
+### Syntax for the `config` Parameter
+
+The `config` parameter accepts key-value mappings where the key is the action label, and the value is the scheduling specification. The scheduling syntax follows the conventions outlined in the [schedule library documentation](https://schedule.readthedocs.io/en/stable/examples.html).
 
 ```python
-pulse_settings = {
-    "interval": "5m",           # Example: "5m" for 5 minutes, "1h" for 1 hour
-    "task": "task_identifier",  # Identifier for the task to be triggered
-    "parameters": {             # Task-specific parameters
-        "priority": "high",
-        "retry": 3
-    }
+config = {
+        # Example key-value mappings
+        "PulseAction": "every(5).seconds",
+        "XYZAction": "every(1).hour.until('2030-01-01 18:00')"
 }
 ```
 
 ---
 
-### Example Configurations
+### Programmatic Configuration Management
 
-### Basic Configuration for a 5-Minute Interval
+Once a reference to the `pulse_action` is acquired, you can programmatically add or remove schedule entries using the following methods:
+
+#### Adding a Schedule Entry
 
 ```python
-pulse_settings = {
-    "interval": "5m",
-    "task": "send_email_notifications",
-    "parameters": {
-        "priority": "high",
-        "retry": 3
-    }
-}
+pulse_action = self.get_agent().get_actions().get(action_label="PulseAction")
+pulse_action.add_schedule("MyOwnAction", "every(1).hour.until('2030-01-01 18:00')")
 ```
+
+#### Removing a Schedule Entry
+
+```python
+pulse_action.remove_schedule("MyOwnAction")
+```
+
+### Method Definitions
+
+- **`add_schedule(action_label: str, interval_spec: str)`**
+    Adds a new schedule entry for the specified action and interval.
+    Example:
+    ```python
+    pulse_action.add_schedule("MyOwnAction", "every(1).hour.until('2030-01-01 18:00')")
+    ```
+
+- **`remove_schedule(action_label: str)`**
+    Removes an existing schedule entry for the specified action.
+    Example:
+    ```python
+    pulse_action.remove_schedule("MyOwnAction")
+    ```
+
+These methods allow dynamic management of schedules, enabling flexibility and scalability for task execution.
 
 ### Best Practices
 - Validate your task identifiers and parameters before deployment.
@@ -130,4 +154,4 @@ pulse_settings = {
 
 ## 🎗 License
 
-This project is protected under the Apache License 2.0. See [LICENSE](./LICENSE) for more information.
+This project is protected under the Apache License 2.0. See [LICENSE](../LICENSE) for more information.

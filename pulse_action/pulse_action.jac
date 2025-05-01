@@ -23,7 +23,6 @@ node PulseAction :Action: {
     };
 
     can on_register() {
-
         # need to make ctx transient since it messes with YAML export
         self.transient_attrs += ['ctx'];
         # set up the schedule based on the config
@@ -72,6 +71,19 @@ node PulseAction :Action: {
             # has safety checks to prevent spamming
             AgentPulse.start();
         }
+    }
+
+    can add_schedule(action_label:str, interval_spec:str) {
+        # accepts the action and time interval spec (see https://schedule.readthedocs.io/en/stable/examples.html)
+        # then prepares the queued job
+        self.config[action_label] = interval_spec;
+        self.postupdate();
+    }
+
+    can remove_schedule(action_label:str) {
+        # accepts the action then removes the queued job
+        del self.config[action_label];
+        self.postupdate();
     }
 
     can queue_action_pulse(action_label:str, interval:str) {
