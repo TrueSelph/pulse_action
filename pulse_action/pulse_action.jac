@@ -44,7 +44,7 @@ node PulseAction :Action: {
         AgentPulse.start();
     }
 
-    can postupdate() {
+    can post_update() {
         # stop the pulse
         AgentPulse.stop();
         # clear all scheduled items
@@ -77,14 +77,29 @@ node PulseAction :Action: {
         # accepts the action and time interval spec (see https://schedule.readthedocs.io/en/stable/examples.html)
         # then prepares the queued job
         self.config[action_label] = interval_spec;
-        self.postupdate();
+        self.init_schedule();
+        self.get_agent().update();
     }
 
     can remove_schedule(action_label:str) {
         # accepts the action then removes the queued job
+        if not self.has_schedule(action_label) {
+            return;
+        }
+        # remove the job from the schedule
         del self.config[action_label];
-        self.postupdate();
+        schedule.clear(action_label);
+        self.get_agent().update();
     }
+
+    can has_schedule(action_label:str) -> bool {
+        # accepts the action then checks if the job exists
+        if action_label in self.config {
+            return True;
+        }
+        return False;
+    }
+
 
     can queue_action_pulse(action_label:str, interval:str) {
         # accepts the action and time interval spec (see https://schedule.readthedocs.io/en/stable/examples.html)
