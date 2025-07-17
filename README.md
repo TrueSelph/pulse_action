@@ -6,7 +6,7 @@
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/TrueSelph/pulse_action)
 ![GitHub](https://img.shields.io/github/license/TrueSelph/pulse_action)
 
-This action provides a core mechanism for triggering scheduled pulse activities in subscribing actions. As a pulse action, it ensures periodic and timely execution of tasks within the subscribing actions framework. The package is a singleton and requires the Jivas library version 2.0.0.
+This action provides a core mechanism for triggering scheduled pulse activities in subscribing actions. As a pulse action, it ensures periodic and timely execution of tasks within the subscribing actions framework. The package is a singleton and requires the Jivas library version 2.1.0.
 
 ## Package Information
 
@@ -26,7 +26,7 @@ This action provides a core mechanism for triggering scheduled pulse activities 
 
 ## Dependencies
 
-- **Jivas:** `^2.0.0`
+- **Jivas:** `^2.1.0`
 
 ---
 
@@ -52,7 +52,7 @@ The action accepts direct entries under the `config` parameter, which can be spe
 - action: jivas/pulse_action
     context:
         enabled: true
-        version: ">=0.0.1"
+        version: ">=0.1.0"
         config:
             DHBReportUpdateInteractAction: every().day.at("05:30", "America/Guyana")
 ```

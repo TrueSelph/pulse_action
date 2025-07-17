@@ -1,8 +1,8 @@
 package:
   name: jivas/pulse_action
   author: V75 Inc.
-  architype: PulseAction
-  version: 0.0.2
+  archetype: PulseAction
+  version: 0.1.0
   meta:
     title: Pulse Action
     description: core pulse action for triggering scheduled pulse ability on subscribing actions.
@@ -11,6 +11,6 @@ package:
   config:
     singleton: true
   dependencies:
-    jivas: ^2.0.0
+    jivas: ~2.1.0
 
 
