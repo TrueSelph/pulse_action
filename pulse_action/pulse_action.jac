@@ -1,12 +1,11 @@
-import:py schedule;
-import:py logging;
-import:py traceback;
-import:py from logging { Logger }
-import:py from jvserve.lib.agent_interface { AgentInterface }
-import:py from jvserve.lib.agent_pulse { AgentPulse }
-import:jac from jivas.agent.action.action { Action }
+import schedule;
+import logging;
+import traceback;
+import from logging { Logger }
+import from jivas.agent.action.action { Action }
+import from jvserve.lib.agent_interface { do_pulse }
 
-node PulseAction :Action: {
+node PulseAction(Action) {
     # Registers a cron-like job to trigger agent actions on an interval.
 
     # set up logger
@@ -22,58 +21,45 @@ node PulseAction :Action: {
         # 'XYZAction': 'every(1).hour.until("2030-01-01 18:00")'
     };
 
-    can on_register() {
+    def on_register() {
         # need to make ctx transient since it messes with YAML export
         self.transient_attrs += ['ctx'];
         # set up the schedule based on the config
         self.init_schedule();
     }
 
-    can on_deregister() {
+    def on_deregister() {
         # cancel all jobs tagged by 'action'
         schedule.clear('pulse-actions');
-        # stop the pulse
-        AgentPulse.stop();
     }
 
-    can on_disable() {
-        AgentPulse.stop();
-    }
-
-    can on_enable() {
-        AgentPulse.start();
-    }
-
-    can post_update() {
-        # stop the pulse
-        AgentPulse.stop();
+    def post_update() {
         # clear all scheduled items
         schedule.clear('pulse-actions');
         # re-init the schedule
         self.init_schedule();
     }
 
-    can pulse() {
+    def on_enable() {
+        self.init_schedule();
+    }
+
+    def on_disable() {
+        schedule.clear('pulse-actions');
+    }
+
+    def pulse() {
         self.logger.info('pulsing..');
     }
 
-    can init_schedule() {
+    def init_schedule() {
         # sets up all scheduled jobs based on schedule config
-
         for action_label in self.config.keys() {
             self.queue_action_pulse(action_label=action_label, interval=self.config[action_label]);
         }
-
-        # if we have jobs, start the thread
-        jobs = schedule.get_jobs('pulse-actions');
-
-        if(len(jobs) > 0 and self.enabled) {
-            # has safety checks to prevent spamming
-            AgentPulse.start();
-        }
     }
 
-    can add_schedule(action_label:str, interval_spec:str) {
+    def add_schedule(action_label:str, interval_spec:str) {
         # accepts the action and time interval spec (see https://schedule.readthedocs.io/en/stable/examples.html)
         # then prepares the queued job
         self.config[action_label] = interval_spec;
@@ -81,7 +67,7 @@ node PulseAction :Action: {
         self.get_agent().update();
     }
 
-    can remove_schedule(action_label:str) {
+    def remove_schedule(action_label:str) {
         # accepts the action then removes the queued job
         if not self.has_schedule(action_label) {
             return;
@@ -92,7 +78,7 @@ node PulseAction :Action: {
         self.get_agent().update();
     }
 
-    can has_schedule(action_label:str) -> bool {
+    def has_schedule(action_label:str) -> bool {
         # accepts the action then checks if the job exists
         if action_label in self.config {
             return True;
@@ -101,7 +87,7 @@ node PulseAction :Action: {
     }
 
 
-    can queue_action_pulse(action_label:str, interval:str) {
+    def queue_action_pulse(action_label:str, interval:str) {
         # accepts the action and time interval spec (see https://schedule.readthedocs.io/en/stable/examples.html)
         # then prepares the queued job
         try {
@@ -111,7 +97,7 @@ node PulseAction :Action: {
             # let's ensure we clear any preexisting jobs under the tag 'action_label'
             schedule.clear(action_label);
             # now, prepare the schedule statement
-            exec_str = f'schedule.{interval}.do(AgentInterface.api_pulse, "action_label={action_label}", "agent_id={agent_id}").tag("pulse-actions", "{action_label}")';
+            exec_str = f'schedule.{interval}.do(do_pulse, "action_label={action_label}", "agent_id={agent_id}").tag("pulse-actions", "{action_label}")';
             # let errr rip..
             return exec(exec_str);
         } except Exception as e {
