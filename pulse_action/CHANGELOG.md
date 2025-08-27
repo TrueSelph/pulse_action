@@ -13,3 +13,6 @@
 
 # 0.1.2
 - version bump
+
+# 0.1.3
+- reverted to in-built jvserve threaded pulse for stability
