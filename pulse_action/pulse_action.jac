@@ -4,6 +4,7 @@ import traceback;
 import from logging { Logger }
 import from jivas.agent.action.action { Action }
 import from jvserve.lib.agent_interface { do_pulse }
+import from jvserve.lib.agent_pulse { AgentPulse }
 
 node PulseAction(Action) {
     # Registers a cron-like job to trigger agent actions on an interval.
@@ -31,21 +32,25 @@ node PulseAction(Action) {
     def on_deregister() {
         # cancel all jobs tagged by 'action'
         schedule.clear('pulse-actions');
+        # stop the pulse
+        AgentPulse.stop();
     }
 
     def post_update() {
+        # stop the pulse
+        AgentPulse.stop();
         # clear all scheduled items
         schedule.clear('pulse-actions');
         # re-init the schedule
         self.init_schedule();
     }
 
-    def on_enable() {
-        self.init_schedule();
+    def on_disable() {
+        AgentPulse.stop();
     }
 
-    def on_disable() {
-        schedule.clear('pulse-actions');
+    def on_enable() {
+        AgentPulse.start();
     }
 
     def pulse() {
@@ -54,8 +59,17 @@ node PulseAction(Action) {
 
     def init_schedule() {
         # sets up all scheduled jobs based on schedule config
+
         for action_label in self.config.keys() {
             self.queue_action_pulse(action_label=action_label, interval=self.config[action_label]);
+        }
+
+        # if we have jobs, start the thread
+        jobs = schedule.get_jobs('pulse-actions');
+
+        if(len(jobs) > 0 and self.enabled) {
+            # has safety checks to prevent spamming
+            AgentPulse.start();
         }
     }
 
